@@ -2,7 +2,7 @@
 # @Author: shubham
 # @Date:   2017-03-07 03:40:40
 # @Last Modified by:   shubham
-# @Last Modified time: 2017-03-07 05:08:28
+# @Last Modified time: 2017-03-07 05:27:55
 
 import sys
 import numpy as np
@@ -13,8 +13,8 @@ class RNN():
 		# voacb size
 		self.vocab_size = insize
 
-		# [h x 1] hidden state, summarising the contents of past
-		self.h = np.zeros((hsize, 1))
+		# [1 x H] hidden state, summarising the contents of past
+		self.h = np.zeros((1, hsize))
 
 		# weights, normally distributed
 		self.Wxh = np.random.randn(insize, hsize) * 0.01
@@ -22,37 +22,38 @@ class RNN():
 		self.Why = np.random.randn(hsize, outsize) * 0.01
 
 		# biases
-		self.bh = np.zeros((hsize, 1))
-		self.by = np.zeros((outsize, 1))
+		self.bh = np.zeros((1, hsize))
+		self.by = np.zeros((1, outsize))
 
 		self.lr = learning_rate
 
-	def step(self, inputs, targets):
+	def train(self, inputs, targets):
 		x, h, y, p = {}, {}, {}, {}
 
 		loss = 0
 		h[-1] = np.copy(self.h)
 
 		# for each time-step
-		for t in range(len(x)):
+		for t in range(len(inputs)):
 			# one-hot-encode input
-			x[t] = np.zeros((1, vocab_size))
-			x[t][inputs[t]] = 1
+			x[t] = np.zeros((1, self.vocab_size))
+			x[t][0][inputs[t]] = 1
 
 			# tanh(x*w1 + h_prev*w1 + b) -- hidden state
-			h[t] = np.tanh(np.dot(x, self.Wxh) + np.dot(self.h[t-1]) + self.bh)
+			h[t] = np.tanh(np.dot(x[t], self.Wxh) + np.dot(h[t-1], self.Whh) + self.bh)
 
 			# unnormalized log probabilities for next char
 			y[t] = np.dot(h[t], self.Why) + self.by
 
 			# probability distribution, softmax loss
 			p[t] = np.exp(y[t]) / np.sum(np.exp(y[t]))
-			loss += -p[t][targets[t]]
+			loss += -p[t][0][targets[t]]
 
 		return loss
 
 
 def main():
+	# I/O
 	# should be simple plain text file
 	data = open(sys.argv[1], 'r', encoding='utf-8', errors='ignore').read()
 	chars = list(set(data))
@@ -70,13 +71,19 @@ def main():
 	
 	rnn = RNN(insize, hsize, outsize)
 
-	# number of steps to unroll the RNN for
-	seq_length = 25 
+	i, n = 0, 0
+	seq_length = 10 # number of steps to unroll the RNN for
 	
-	i, n = 0, 0		
-	while True:
+	# while True:
+	for _ in range(1):
 		inputs = [char_to_ix[ch] for ch in data[i:i+seq_length]]
 		targets = [char_to_ix[ch] for ch in data[i+1:i+seq_length+1]]
+
+		loss = rnn.train(inputs, targets)
+		print(loss)
+
+		i += seq_length
+
 
 
 if __name__ == '__main__':
