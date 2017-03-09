@@ -2,7 +2,7 @@
 # @Author: shubham
 # @Date:   2017-03-07 03:40:40
 # @Last Modified by:   shubham
-# @Last Modified time: 2017-03-07 05:27:55
+# @Last Modified time: 2017-03-07 05:30:26
 
 import sys
 import numpy as np
@@ -33,6 +33,8 @@ class RNN():
 		loss = 0
 		h[-1] = np.copy(self.h)
 
+		
+		# -------- Forward-pass --------
 		# for each time-step
 		for t in range(len(inputs)):
 			# one-hot-encode input
@@ -48,6 +50,10 @@ class RNN():
 			# probability distribution, softmax loss
 			p[t] = np.exp(y[t]) / np.sum(np.exp(y[t]))
 			loss += -p[t][0][targets[t]]
+		
+		# -------- Backward-pass --------
+		
+		
 
 		return loss
 
